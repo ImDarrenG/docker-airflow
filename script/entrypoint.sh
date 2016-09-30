@@ -9,7 +9,14 @@ TRY_LOOP="10"
 RABBITMQ_CREDS="airflow:airflow"
 FERNET_KEY=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print FERNET_KEY")
 
+curl ${TGR_AIRFLOW_CFG} -o airflow.cfg
+
 sed -i "s#sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@postgres/airflow#sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@${POSTGRES_HOST}/airflow#" "$AIRFLOW_HOME"/airflow.cfg
+
+# retrieve dags from central repo
+mkdir ${AIRFLOW_HOME}/dags
+curl ${TGR_DAGS_REPO} -o hello_airflow.py
+mv ${AIRFLOW_HOME}/hello_airflow.py ${AIRFLOW_HOME}/dags/hello_airflow.py
 
 # Load DAGs exemples (default: Yes)
 if [ "x$LOAD_EX" = "xn" ]; then
@@ -32,6 +39,8 @@ if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] ; the
     sleep 5
   done
   if [ "$1" = "webserver" ]; then
+    echo "resetting database..."
+    $CMD resetdb -y
     echo "Initialize database..."
     $CMD initdb
   fi
@@ -41,8 +50,10 @@ fi
 # If we use docker-compose, we use Celery (rabbitmq container).
 if [ "x$EXECUTOR" = "xCelery" ]
 then
+  echo "we are Celery"
 # wait for rabbitmq
   if [ "$1" = "webserver" ] || [ "$1" = "worker" ] || [ "$1" = "scheduler" ] || [ "$1" = "flower" ] ; then
+    echo "checking rabbitmq status"
     j=0
     while ! curl -sI -u $RABBITMQ_CREDS http://$RABBITMQ_HOST:15672/api/whoami |grep '200 OK'; do
       j=$((j+1))
@@ -54,15 +65,19 @@ then
       sleep 5
     done
   fi
+  echo "executing airflow command ${CMD} ${@}"
   exec $CMD "$@"
 elif [ "x$EXECUTOR" = "xLocal" ]
 then
+  echo "we are local"
+  echo "executing airflow command ${CMD} ${@}"
   sed -i "s/executor = CeleryExecutor/executor = LocalExecutor/" "$AIRFLOW_HOME"/airflow.cfg
   exec $CMD "$@"
 else
   if [ "$1" = "version" ]; then
     exec $CMD version
   fi
+  echo "executing default path"
   sed -i "s/executor = CeleryExecutor/executor = SequentialExecutor/" "$AIRFLOW_HOME"/airflow.cfg
   sed -i "s#sql_alchemy_conn = .+#sql_alchemy_conn = sqlite:////usr/local/airflow/airflow.db#" "$AIRFLOW_HOME"/airflow.cfg
   echo "Initialize database..."

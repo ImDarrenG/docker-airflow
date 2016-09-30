@@ -1,18 +1,17 @@
-# VERSION 1.7.1.3-2
-# AUTHOR: Matthieu "Puckel_" Roisil
-# DESCRIPTION: Basic Airflow container
-# BUILD: docker build --rm -t puckel/docker-airflow
-# SOURCE: https://github.com/puckel/docker-airflow
+# VERSION 0.1
+# AUTHOR: ImDarrenG
+# DESCRIPTION: Basic Airflow container optimised for DCOS/Marathon
+# BUILD: docker build --rm -t imdarreng/docker-airflow
+# SOURCE: https://github.com/imdarreng/docker-airflow
 
 FROM debian:jessie
-MAINTAINER Puckel_
+MAINTAINER ImDarrenG
 
 # Never prompts the user for choices on installation/configuration of packages
 ENV DEBIAN_FRONTEND noninteractive
 ENV TERM linux
 
 # Airflow
-ARG AIRFLOW_VERSION=1.7.1.3
 ENV AIRFLOW_HOME /usr/local/airflow
 
 # Define en_US.
@@ -54,7 +53,7 @@ RUN set -ex \
     && pip install ndg-httpsclient \
     && pip install pyasn1 \
     && pip install psycopg2 \
-    && pip install airflow[celery,postgresql,hive]==$AIRFLOW_VERSION \
+    && pip install airflow[celery,postgresql,hive] \
     && apt-get remove --purge -yqq $buildDeps libpq-dev \
     && apt-get clean \
     && rm -rf \
