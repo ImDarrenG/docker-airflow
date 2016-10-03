@@ -15,8 +15,8 @@ sed -i "s#sql_alchemy_conn = postgresql+psycopg2://airflow:airflow@postgres/airf
 
 # retrieve dags from central repo
 mkdir ${AIRFLOW_HOME}/dags
-curl ${TGR_DAGS_REPO} -o hello_airflow.py
-mv ${AIRFLOW_HOME}/hello_airflow.py ${AIRFLOW_HOME}/dags/hello_airflow.py
+curl ${TGR_DAGS_REPO} -o ${AIRFLOW_HOME}/dags.zip
+unzip ${AIRFLOW_HOME}/dags.zip -d ${AIRFLOW_HOME}/dags
 
 # Load DAGs exemples (default: Yes)
 if [ "x$LOAD_EX" = "xn" ]; then

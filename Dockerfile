@@ -42,7 +42,7 @@ RUN set -ex \
         curl \
         netcat \
         locales \
-    && apt-get install -yqq -t jessie-backports python-requests libpq-dev \
+    && apt-get install -yqq -t jessie-backports python-requests libpq-dev zip unzip \
     && sed -i 's/^# en_US.UTF-8 UTF-8$/en_US.UTF-8 UTF-8/g' /etc/locale.gen \
     && locale-gen \
     && update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 \
